@@ -2,34 +2,49 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net"
-	"net/http"
-	"strings"
+	"os"
+)
+
+const (
+	CONN_HOST = "localhost"
+	CONN_PORT = "3333"
+	CONN_TYPE = "tcp"
 )
 
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "<html>", "<body>", "<h1>IP Echo</h1>")
-		defer fmt.Fprint(w, "</body>", "</html>")
-
-		ip, _, err := net.SplitHostPort(r.RemoteAddr)
-		if nil != err {
-			fmt.Fprintf(w, "error (%q): %q is not in ip:port format", err, r.RemoteAddr)
+	// Listen for incoming connections.
+	l, err := net.Listen(CONN_TYPE, CONN_HOST+":"+CONN_PORT)
+	if err != nil {
+		fmt.Println("Error listening:", err.Error())
+		os.Exit(1)
+	}
+	// Close the listener when the application closes.
+	defer l.Close()
+	fmt.Println("Listening on " + CONN_HOST + ":" + CONN_PORT)
+	for {
+		// Listen for an incoming connection.
+		conn, err := l.Accept()
+		if err != nil {
+			fmt.Println("Error accepting: ", err.Error())
+			os.Exit(1)
 		}
+		// Handle connections in a new goroutine.
+		go handleRequest(conn)
+	}
+}
 
-		uIP := net.ParseIP(ip)
-		if nil == uIP {
-			fmt.Fprintf(w, "error: %q is not in ip:port format", ip)
-			return
-		}
-
-		f := r.Header.Get("X-Forwarded-For")
-
-		fmt.Fprint(w, "<p>", uIP, "</p>")
-		fmt.Fprint(w, "<p>Forwarded:<br/>", strings.Join(strings.Split(f, ", "), "<br/>\n"))
-	})
-
-	log.Print("server starting")
-	log.Fatal(http.ListenAndServe(":8099", nil))
+// Handles incoming requests.
+func handleRequest(conn net.Conn) {
+	// Make a buffer to hold incoming data.
+	buf := make([]byte, 1024)
+	// Read the incoming connection into the buffer.
+	_, err := conn.Read(buf)
+	if err != nil {
+		fmt.Println("Error reading:", err.Error())
+	}
+	// Send a response back to person contacting us.
+	conn.Write([]byte(conn.RemoteAddr().String()))
+	// Close the connection when you're done with it.
+	conn.Close()
 }
