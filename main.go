@@ -7,9 +7,9 @@ import (
 )
 
 const (
-	CONN_HOST = "0.0.0.0"
+	CONN_HOST = "[::]"
 	CONN_PORT = "3333"
-	CONN_TYPE = "tcp"
+	CONN_TYPE = "tcp6"
 )
 
 func main() {
