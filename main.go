@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	CONN_HOST = "[2600:1f18:43c7:6002:d9fc:de07:3c22:1bb9%eth0]"
+	CONN_HOST = "[::]"
 	CONN_PORT = "3333"
 	CONN_TYPE = "tcp"
 )
